@@ -1,0 +1,80 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.1/context",
+  "@graph": [
+    {
+      "@type": "CreativeWork",
+      "@id": "ro-crate-metadata.json",
+      "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+      "about": {"@id": "./"}
+    },
+    {
+      "@type": "Dataset",
+      "@id": "./",
+      "name": "Sample Climate Research Dataset",
+      "description": "A sample dataset containing climate measurements from various weather stations across Europe from 2020-2023.",
+      "datePublished": "2024-01-15",
+      "license": {"@id": "https://creativecommons.org/licenses/by/4.0/"},
+      "creator": [
+        {
+          "@type": "Person",
+          "@id": "https://orcid.org/0000-0002-1825-0097",
+          "name": "Dr. Jane Smith",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "European Climate Research Institute"
+          }
+        }
+      ],
+      "hasPart": [
+        {"@id": "data/temperature_measurements.csv"},
+        {"@id": "data/precipitation_data.csv"},
+        {"@id": "analysis/climate_trends.ipynb"},
+        {"@id": "README.md"}
+      ],
+      "keywords": ["climate", "weather", "temperature", "precipitation", "Europe"],
+      "temporalCoverage": "2020/2023",
+      "spatialCoverage": {
+        "@type": "Place",
+        "name": "Europe",
+        "geo": {
+          "@type": "GeoShape",
+          "box": "35.0 -10.0 71.0 40.0"
+        }
+      }
+    },
+    {
+      "@type": "File",
+      "@id": "data/temperature_measurements.csv",
+      "name": "Temperature Measurements",
+      "description": "Daily temperature measurements from 150 weather stations across Europe",
+      "encodingFormat": "text/csv",
+      "contentSize": "2.3MB"
+    },
+    {
+      "@type": "File",
+      "@id": "data/precipitation_data.csv",
+      "name": "Precipitation Data",
+      "description": "Daily precipitation measurements from the same weather stations",
+      "encodingFormat": "text/csv",
+      "contentSize": "1.8MB"
+    },
+    {
+      "@type": "File",
+      "@id": "analysis/climate_trends.ipynb",
+      "name": "Climate Trends Analysis",
+      "description": "Jupyter notebook containing analysis of temperature and precipitation trends",
+      "encodingFormat": "application/x-ipynb+json",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      }
+    },
+    {
+      "@type": "File",
+      "@id": "README.md",
+      "name": "README",
+      "description": "Documentation for the dataset",
+      "encodingFormat": "text/markdown"
+    }
+  ]
+}

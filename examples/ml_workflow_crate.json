@@ -1,0 +1,105 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.1/context",
+  "@graph": [
+    {
+      "@type": "CreativeWork",
+      "@id": "ro-crate-metadata.json",
+      "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+      "about": {"@id": "./"}
+    },
+    {
+      "@type": "Dataset",
+      "@id": "./",
+      "name": "Machine Learning Model Training Workflow",
+      "description": "Complete workflow for training a deep learning model for image classification, including data preprocessing, model training, and evaluation scripts.",
+      "datePublished": "2024-07-20",
+      "license": {"@id": "https://opensource.org/licenses/MIT"},
+      "creator": [
+        {
+          "@type": "Person",
+          "@id": "https://orcid.org/0000-0003-4567-8901",
+          "name": "Alex Chen",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "AI Research Lab, Tech University"
+          }
+        }
+      ],
+      "hasPart": [
+        {"@id": "src/data_preprocessing.py"},
+        {"@id": "src/model.py"},
+        {"@id": "src/train.py"},
+        {"@id": "src/evaluate.py"},
+        {"@id": "config/training_config.yaml"},
+        {"@id": "models/trained_model.pth"},
+        {"@id": "results/evaluation_metrics.json"},
+        {"@id": "notebooks/exploratory_analysis.ipynb"}
+      ],
+      "keywords": ["machine learning", "deep learning", "image classification", "pytorch", "computer vision"],
+      "programmingLanguage": [
+        {
+          "@type": "ComputerLanguage",
+          "name": "Python",
+          "version": "3.9"
+        }
+      ],
+      "runtimePlatform": "PyTorch 2.0",
+      "funding": {
+        "@type": "Grant",
+        "name": "AI Research Grant 2024",
+        "funder": {
+          "@type": "Organization",
+          "name": "National Science Foundation"
+        }
+      }
+    },
+    {
+      "@type": "File",
+      "@id": "src/data_preprocessing.py",
+      "name": "Data Preprocessing Script",
+      "description": "Python script for cleaning and preparing image data for training",
+      "encodingFormat": "text/x-python",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      }
+    },
+    {
+      "@type": "File",
+      "@id": "src/model.py",
+      "name": "Model Definition",
+      "description": "PyTorch model architecture definition using ResNet backbone",
+      "encodingFormat": "text/x-python"
+    },
+    {
+      "@type": "File",
+      "@id": "models/trained_model.pth",
+      "name": "Trained Model",
+      "description": "Serialized PyTorch model after training on the dataset",
+      "encodingFormat": "application/octet-stream",
+      "contentSize": "98.7MB"
+    },
+    {
+      "@type": "File",
+      "@id": "results/evaluation_metrics.json",
+      "name": "Evaluation Metrics",
+      "description": "Model performance metrics including accuracy, precision, recall, and F1-score",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "ComputationalWorkflow",
+      "@id": "#training_workflow",
+      "name": "Model Training Workflow",
+      "description": "Complete workflow for training the image classification model",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "hasPart": [
+        {"@id": "src/data_preprocessing.py"},
+        {"@id": "src/train.py"},
+        {"@id": "src/evaluate.py"}
+      ]
+    }
+  ]
+}
