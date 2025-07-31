@@ -47,7 +47,15 @@ RO-Crate is a lightweight approach to packaging research data with their metadat
 
 4. Explore the example RO-Crate manifests in the `examples/` directory
 
-5. Run experiments using the scripts in the `experiments/` directory
+5. Run experiments using the scripts in the `experiments/` directory:
+   ```bash
+   python experiments/describe_rocrates.py
+   ```
+   
+   This will analyze all RO-Crate manifests in the `examples/` directory and automatically save:
+   - Individual description files in `outputs/`
+   - A combined analysis report with timestamp
+   - Summary statistics of successful/failed analyses
 
 ## RO-Crate Resources
 

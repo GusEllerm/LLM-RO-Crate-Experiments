@@ -10,6 +10,12 @@ import os
 from typing import Dict, Any, List
 import openai
 from pathlib import Path
+import sys
+from datetime import datetime
+
+# Add the parent directory to the path to import from utils
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.token_length import count_tokens, optimize_rocrate_for_llm
 
 
 def load_rocrate_manifest(filepath: str) -> Dict[str, Any]:
@@ -44,9 +50,9 @@ def extract_key_info(manifest: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def generate_description_prompt(key_info: Dict[str, Any]) -> str:
+def generate_description_prompt(key_info: Dict[str, Any], model: str = "gpt-4o") -> str:
     """Generate a prompt for LLM to describe the RO-Crate."""
-    return f"""
+    prompt = f"""
 Please provide a clear, human-readable description of this research object based on the following metadata:
 
 Title: {key_info.get('name', 'Unknown')}
@@ -64,6 +70,18 @@ Files included:
 
 Please write a comprehensive summary that would help a researcher understand what this research object contains and its potential value for their work.
 """
+    
+    # Check token count and optimize if necessary
+    token_count = count_tokens(prompt, model)
+    max_tokens = 120000 if model in ["gpt-4o", "gpt-4-turbo"] else 15000  # Leave room for response
+    
+    if token_count > max_tokens:
+        print(f"⚠️  Prompt too long ({token_count} tokens), optimizing...")
+        prompt = optimize_rocrate_for_llm(prompt, max_tokens, model)
+        new_token_count = count_tokens(prompt, model)
+        print(f"   Reduced to {new_token_count} tokens")
+    
+    return prompt
 
 
 def format_creators(creators: List[Dict[str, Any]]) -> str:
@@ -103,18 +121,88 @@ def format_files(files: List[Dict[str, Any]]) -> str:
     return '\n'.join(formatted)
 
 
-def analyze_rocrate_with_llm(manifest_path: str, model: str = "gpt-3.5-turbo") -> str:
+def save_description_to_file(filename: str, description: str, output_dir: Path) -> str:
+    """Save a single description to a file."""
+    output_dir.mkdir(exist_ok=True)
+    
+    # Create filename based on the RO-Crate name
+    safe_filename = filename.replace('.json', '').replace(' ', '_').replace('/', '_')
+    output_file = output_dir / f"{safe_filename}_description.txt"
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(f"RO-Crate Description: {filename}\n")
+        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("=" * 60 + "\n\n")
+        f.write(description)
+        f.write("\n")
+    
+    return str(output_file)
+
+
+def save_combined_report(results: List[Dict[str, str]], output_dir: Path, model: str) -> str:
+    """Save a combined report of all descriptions."""
+    output_dir.mkdir(exist_ok=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    report_file = output_dir / f"rocrate_analysis_report_{timestamp}.txt"
+    
+    with open(report_file, 'w', encoding='utf-8') as f:
+        f.write("RO-Crate Analysis Report\n")
+        f.write("=" * 50 + "\n")
+        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Model used: {model}\n")
+        f.write(f"Total files analyzed: {len(results)}\n")
+        f.write("=" * 50 + "\n\n")
+        
+        for i, result in enumerate(results, 1):
+            f.write(f"\n{i}. Analysis of: {result['filename']}\n")
+            f.write("-" * 60 + "\n")
+            f.write(result['description'])
+            f.write("\n\n")
+        
+        # Add summary
+        f.write("\n" + "=" * 50 + "\n")
+        f.write("SUMMARY\n")
+        f.write("=" * 50 + "\n")
+        
+        successful = len([r for r in results if not r['description'].startswith('Error')])
+        failed = len(results) - successful
+        
+        f.write(f"Successfully analyzed: {successful}/{len(results)} files\n")
+        if failed > 0:
+            f.write(f"Failed to analyze: {failed} files\n")
+            f.write("\nFailed files:\n")
+            for result in results:
+                if result['description'].startswith('Error'):
+                    f.write(f"- {result['filename']}: {result['description'][:100]}...\n")
+    
+    return str(report_file)
+
+
+def analyze_rocrate_with_llm(manifest_path: str, model: str = "gpt-4o") -> str:
     """Analyze an RO-Crate manifest using an LLM."""
+    # Load API key from api_keys.json
+    try:
+        with open('api_keys.json', 'r') as f:
+            keys = json.load(f)
+            api_key = keys.get('openai_api_key')
+            if not api_key:
+                return "Error: openai_api_key not found in api_keys.json"
+    except FileNotFoundError:
+        return "Error: api_keys.json not found. Please create it with your OpenAI API key."
+    except json.JSONDecodeError:
+        return "Error: Invalid JSON in api_keys.json"
+    
     # Load and extract information
     manifest = load_rocrate_manifest(manifest_path)
     key_info = extract_key_info(manifest)
     
-    # Generate prompt
-    prompt = generate_description_prompt(key_info)
+    # Generate prompt with optimization
+    prompt = generate_description_prompt(key_info, model)
     
-    # Call LLM (requires OpenAI API key)
+    # Call LLM
     try:
-        client = openai.OpenAI()
+        client = openai.OpenAI(api_key=api_key)
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -132,7 +220,20 @@ def analyze_rocrate_with_llm(manifest_path: str, model: str = "gpt-3.5-turbo") -
 
 def main():
     """Run the experiment on sample RO-Crate manifests."""
+    # Configuration
+    model = "gpt-4o"  # Change this if needed
+    save_output = True  # Set to False if you don't want to save files
+    
+    # Setup directories
     examples_dir = Path(__file__).parent.parent / "examples"
+    output_dir = Path(__file__).parent.parent / "outputs"
+    
+    print(f"🤖 Using model: {model}")
+    print(f"📁 Analyzing RO-Crate files in: {examples_dir}")
+    if save_output:
+        print(f"💾 Saving outputs to: {output_dir}")
+    
+    results = []
     
     for manifest_file in examples_dir.glob("*.json"):
         print(f"\n{'='*60}")
@@ -140,10 +241,42 @@ def main():
         print(f"{'='*60}")
         
         try:
-            description = analyze_rocrate_with_llm(str(manifest_file))
+            description = analyze_rocrate_with_llm(str(manifest_file), model)
             print(description)
+            
+            # Store result for saving
+            results.append({
+                'filename': manifest_file.name,
+                'description': description
+            })
+            
+            # Save individual file if requested
+            if save_output:
+                output_file = save_description_to_file(manifest_file.name, description, output_dir)
+                print(f"\n💾 Saved to: {output_file}")
+                
         except Exception as e:
-            print(f"Error processing {manifest_file.name}: {str(e)}")
+            error_msg = f"Error processing {manifest_file.name}: {str(e)}"
+            print(error_msg)
+            results.append({
+                'filename': manifest_file.name,
+                'description': error_msg
+            })
+    
+    # Save combined report
+    if save_output and results:
+        report_file = save_combined_report(results, output_dir, model)
+        print(f"\n📋 Combined report saved to: {report_file}")
+        
+        # Print summary
+        successful = len([r for r in results if not r['description'].startswith('Error')])
+        print(f"\n📊 Summary: {successful}/{len(results)} files successfully analyzed")
+    
+    print(f"\n✅ Analysis complete!")
+    if save_output:
+        print(f"📁 All outputs saved in: {output_dir}")
+    else:
+        print("💡 To save outputs, set save_output=True in the main() function")
 
 
 if __name__ == "__main__":
