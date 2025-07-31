@@ -1,13 +1,18 @@
 """
 Configuration settings for LLM experiments with RO-Crate manifests.
+
+API keys should be stored in api_keys.json file in the project root:
+{
+    "openai_api_key": "your_key_here",
+    "anthropic_api_key": "your_key_here"
+}
 """
 
 import os
 from typing import Dict, Any
 
-# API Configuration
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+# Note: API keys are loaded from api_keys.json in individual scripts
+# This avoids storing sensitive data in configuration files
 
 # Model Configuration
 DEFAULT_MODELS = {

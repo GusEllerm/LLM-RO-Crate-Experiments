@@ -25,9 +25,29 @@ RO-Crate is a lightweight approach to packaging research data with their metadat
    pip install -r requirements.txt
    ```
 
-2. Explore the example RO-Crate manifests in the `examples/` directory
+2. Set up your API keys by creating an `api_keys.json` file:
+   ```bash
+   cp api_keys.json.template api_keys.json
+   # Then edit api_keys.json with your actual API keys
+   ```
+   
+   The file should look like:
+   ```json
+   {
+     "openai_api_key": "sk-proj-your_actual_openai_key_here",
+     "anthropic_api_key": "your_actual_anthropic_key_here"
+   }
+   ```
+   **Note:** This file is automatically excluded from git to keep your keys secure.
 
-3. Run experiments using the scripts in the `experiments/` directory
+3. Test your setup:
+   ```bash
+   python test_setup.py
+   ```
+
+4. Explore the example RO-Crate manifests in the `examples/` directory
+
+5. Run experiments using the scripts in the `experiments/` directory
 
 ## RO-Crate Resources
 
