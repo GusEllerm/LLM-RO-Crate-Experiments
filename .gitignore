@@ -54,6 +54,7 @@ Thumbs.db
 # LLM API keys and sensitive data
 *.key
 api_keys.txt
+api_keys.json
 secrets/
 
 # Experiment outputs
